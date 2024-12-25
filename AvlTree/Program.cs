@@ -12,6 +12,7 @@ class Program
         tree1.Insert(4);
         tree1.Insert(9);
 
+
         AVLTree tree2 = new AVLTree();
         tree2.Insert(20);
         tree2.Insert(19);
@@ -61,38 +62,48 @@ class AVLTree
     {
         PreOrderTraversal(root);
     }
+
     public static AVLTree operator +(AVLTree tree1, AVLTree tree2)
     {
-        // Находим максимальное значение в tree1
+        // Всегда определяем дерево с меньшим максимумом как левое
+        if (GetMaxValue(tree1.root) <= GetMaxValue(tree2.root))
+        {
+            return MergeTrees(tree1, tree2);
+        }
+        else
+        {
+            return MergeTrees(tree2, tree1);
+        }
+    }
+
+    public static AVLTree MergeTrees(AVLTree tree1, AVLTree tree2)
+    {
+        // Находим максимальное значение и высоту обоих деревьев
         int maxValueTree1 = GetMaxValue(tree1.root);
-        // Находим минимальное значение в tree2
-        int minValueTree2 = GetMinValue(tree2.root);
+        int maxValueTree2 = GetMaxValue(tree2.root);
 
         int heightT1 = tree1.GetHeight(tree1.root);
         int heightT2 = tree2.GetHeight(tree2.root);
 
-        AVLTree newTree = new AVLTree();
-
-        if (maxValueTree1 <= minValueTree2)
+        // Логика выбора алгоритма слияния
+        if (heightT1 <= heightT2)
         {
-            // Если все ключи в tree1 меньше либо равны ключам в tree2
-            if (heightT1 <= heightT2)
-            {
-                Console.WriteLine("Используем обычный алгоритм слияния");
-                return MergeUsingAlgorithm3(tree1, tree2);
-            }
-            else
-            {
-                Console.WriteLine("Симметричный");
-                return MergeUsingSymmetricAlgorithm(tree1, tree2);
-            }
+            // Если все ключи в tree1 меньше или равны ключам в tree2
+            Console.WriteLine("Используем обычный алгоритм слияния.");
+            return MergeUsingAlgorithm3(tree1, tree2);
+        }
+        else if (heightT1 > heightT2)
+        {
+            Console.WriteLine("Используем симметричный алгоритм слияния.");
+            return MergeUsingSymmetricAlgorithm(tree1, tree2);
         }
         else
         {
-            Console.WriteLine("Используем обычный алгоритм Дерево + Дерево");
-            return MergeTrees(tree1, tree2);
+            Console.WriteLine("Используем другой алгоритм слияния.");
+            return MergeTrees123(tree1, tree2);
         }
     }
+
 
     public static AVLTree MergeUsingSymmetricAlgorithm(AVLTree tree1, AVLTree tree2)
     {
@@ -264,7 +275,7 @@ class AVLTree
         return node;
     }
 
-    private static AVLTree MergeTrees(AVLTree tree1, AVLTree tree2)
+    private static AVLTree MergeTrees123(AVLTree tree1, AVLTree tree2)
     {
         // Вставляем все узлы из tree1 и tree2 в новое дерево
         AVLTree newTree = new AVLTree();

@@ -5,24 +5,21 @@ class Program
     static void Main()
     {
         AVLTree tree1 = new AVLTree();
+        tree1.Insert(10);
         tree1.Insert(5);
-        tree1.Insert(3);
-        tree1.Insert(6);
-        tree1.Insert(2);
-        tree1.Insert(4);
-        tree1.Insert(9);
-
+        tree1.Insert(15);
 
         AVLTree tree2 = new AVLTree();
+        tree2.Insert(30);
         tree2.Insert(20);
-        tree2.Insert(19);
-        tree2.Insert(21);
+        tree2.Insert(60);
 
 
 
         AVLTree result2 = tree1 + tree2;
         result2.PreOrderTraversal();
-        Console.WriteLine();
+
+
 
     }
 }
@@ -82,8 +79,8 @@ class AVLTree
         int maxValueTree1 = GetMaxValue(tree1.root);
         int maxValueTree2 = GetMaxValue(tree2.root);
 
-        int heightT1 = tree1.GetHeight(tree1.root);
-        int heightT2 = tree2.GetHeight(tree2.root);
+        int heightT1 = GetHeight(tree1.root);
+        int heightT2 = GetHeight(tree2.root);
 
         // Логика выбора алгоритма слияния
         if (heightT1 <= heightT2)
@@ -113,33 +110,30 @@ class AVLTree
         tree2.root = tree2.Delete(tree2.root, minValue); // Удаляем минимальный элемент из второго дерева
 
         // Шаг 2: Находим высоту второго дерева
-        int heightT2 = tree2.GetHeight(tree2.root);
+        int heightT2 = GetHeight(tree2.root);
 
         // Шаг 3: Находим правое поддерево в первом дереве с высотой, равной высоте второго дерева
-        var rightSubtree = GetRightSubtreeWithHeight(tree1.root, heightT2, tree1);
+        tree1.root = GetRightSubtreeWithHeight(tree1.root, heightT2, tree2, minNode);
 
-        // Шаг 4: Удаляем найденное правое поддерево из первого дерева
-        if (rightSubtree != null)
-        {
-            Console.WriteLine($"Удаляем поддерево с корнем {rightSubtree.Value} из tree1.");
-            tree1.root = RemoveRightSubtree(tree1.root, rightSubtree); // Удаляем всё поддерево
-        }
-
-        // Шаг 5: Создаем новое дерево S
-        AVLTree newTree = new AVLTree();
-        newTree.root = new Node(minValue); // Создаем новый узел с ключом minValue
-        newTree.root.Left = rightSubtree;// Левый потомок - rightSubtree
-        newTree.root.Right = tree2.root; // Правый потомок - оставшееся дерево Т1
-
-        // Шаг 6: Присоединяем newTree к tree1
-        // Например, устанавливаем newTree как правое поддерево tree1
-        Node newRoot = new Node(tree1.root.Value); // Создаем новый узел, чтобы сохранить структуру
-        newRoot.Left = tree1.root.Left; // Левое поддерево остается без изменений
-        newRoot.Right = newTree.root; // Присоединяем newTree как правое поддерево
-
-        tree1.root = newRoot; // Устанавливаем новый корень
-
+    
         return tree1;
+    }
+
+    private static AVLTree MergeUsingAlgorithm3(AVLTree tree1, AVLTree tree2)
+    {
+        // Шаг 1: Находим самый правый узел в T1
+        var maxNode = GetMaxNode(tree1.root);
+        var x = maxNode.Value; // Максимальный элемент
+        tree1.root = tree1.Delete(tree1.root, x); // Используем метод Delete
+
+        // Шаг 2: Находим высоту первого дерева
+        int heightT1 = GetHeight(tree1.root); // Получаем высоту дерева T1
+
+        // Шаг 3: Находим левое поддерево в T2 с высотой, равной высоте T1
+        tree2.root = GetLeftSubtreeWithHeight(tree2.root, heightT1, tree1, maxNode);
+
+
+        return tree2;
     }
 
     // Метод, который удаляет узел и всё его поддерево из дерева
@@ -166,92 +160,63 @@ class AVLTree
 
 
     // Метод для получения правого поддерева с заданной высотой
-    private static Node GetRightSubtreeWithHeight(Node node, int targetHeight, AVLTree tree)
+    private static Node GetRightSubtreeWithHeight(Node node, int targetHeight, AVLTree tree2, AVLTree.Node Xvalue)
     {
         if (node == null) return null;
 
         // Проверяем высоту текущего узла
-        int height = tree.GetHeight(node);
-        if (height == targetHeight)
+        int height = GetHeight(node);
+        if (height > targetHeight)
         {
-            return node; // Возвращаем узел, если его высота совпадает с целевой
+            node.Right = GetRightSubtreeWithHeight(node.Right, targetHeight, tree2, Xvalue); // Возвращаем узел, если его высота совпадает с целевой
+            return node;
         }
+        Xvalue.Right = tree2.root;
+        Xvalue.Left = node;
 
-        // Рекурсивно ищем в правом поддереве
-        Node rightResult = GetRightSubtreeWithHeight(node.Right, targetHeight, tree);
-
-        // Если не нашли в правом, ищем в левом поддереве
-        if (rightResult == null)
-        {
-            rightResult = GetRightSubtreeWithHeight(node.Left, targetHeight, tree);
-        }
-
-        return rightResult;
+        return Xvalue;
     }
 
-
-
-
-    private static AVLTree MergeUsingAlgorithm3(AVLTree tree1, AVLTree tree2)
-    {
-        // Шаг 1: Если T1 пустое, вернуть T2
-        if (tree1.IsEmpty())
-        {
-            return tree2;
-        }
-
-        // Шаг 2: Если T2 пустое, вернуть T1
-        if (tree2.IsEmpty())
-        {
-            return tree1;
-        }
-
-        // Шаг 3: Находим самый правый узел в T1
-        var maxNode = GetMaxNode(tree1.root);
-        var x = maxNode.Value; // Ключ стыковочного узла
-
-        // Шаг 4: Отделяем x от дерева T1
-        tree1.root = tree1.Delete(tree1.root, x); // Используем ваш метод Delete
-
-        // Шаг 5: Находим левое поддерево в T2 с высотой, равной высоте T1
-        int heightT1 = tree1.GetHeight(tree1.root); // Получаем высоту дерева T1
-        var leftSubtree = GetLeftSubtreeWithHeight(tree2.root, heightT1, tree2);
-
-
-        // Шаг 6: Конструируем новое дерево S
-        AVLTree newTree = new AVLTree();
-        newTree.root = new Node(x); // Создаем новый узел с ключом x
-        newTree.root.Left = tree1.root; // Левый потомок - T1
-        newTree.root.Right = leftSubtree; // Правый потомок - P
-
-        return newTree;
-    }
-
-
-   
     // Метод для получения поддерева с заданной высотой
-    private static Node GetLeftSubtreeWithHeight(Node node, int targetHeight, AVLTree tree)
+    private static Node GetLeftSubtreeWithHeight(Node node, int targetHeight, AVLTree tree1, AVLTree.Node Minvalue)
     {
         if (node == null) return null;
 
         // Проверяем высоту текущего узла
-        int height = tree.GetHeight(node);
-        if (height == targetHeight)
+        int height = GetHeight(node);
+        if (height > targetHeight)
         {
+            node.Left = GetLeftSubtreeWithHeight(node.Left, targetHeight, tree1, Minvalue);
             return node; // Возвращаем узел, если его высота совпадает с целевой
         }
 
-        // Рекурсивно ищем в левом поддереве
-        Node leftResult = GetLeftSubtreeWithHeight(node.Left, targetHeight, tree);
+        Minvalue.Left = tree1.root;
+        Minvalue.Right = node;
 
-        // Если не нашли в левом, ищем в правом поддереве
-        if (leftResult == null)
+        return Minvalue;
+    }
+
+
+
+    // Метод, который удаляет узел и всё его поддерево из дерева
+    private static Node RemoveLeftSubtree(Node node, Node subtreeRoot)
+    {
+        if (node == null) return null;
+
+        // Если текущий узел - это корень поддерева, которое нужно удалить
+        if (node == subtreeRoot)
         {
-            leftResult = GetLeftSubtreeWithHeight(node.Right, targetHeight, tree);
+            return null; // Возвращаем null для удаления этого узла
         }
 
-        return leftResult;
+        // Рекурсивно проходим по дереву для удаления
+        node.Left = RemoveLeftSubtree(node.Left, subtreeRoot);
+        node.Right = RemoveLeftSubtree(node.Right, subtreeRoot);
+
+        return node; // Возвращаем изменённый узел
     }
+
+
 
 
 
@@ -390,7 +355,7 @@ class AVLTree
         node.Right = RotateRight(node.Right);
         return RotateLeft(node);
     }
-    private int GetHeight(Node node)
+    private static int GetHeight(Node node)
     {
         if (node == null)
         {

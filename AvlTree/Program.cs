@@ -19,8 +19,6 @@ class Program
         AVLTree result2 = tree1 + tree2;
         result2.PreOrderTraversal();
 
-
-
     }
 }
 class AVLTree
@@ -178,7 +176,7 @@ class AVLTree
     }
 
     // Метод для получения поддерева с заданной высотой
-    private static Node GetLeftSubtreeWithHeight(Node node, int targetHeight, AVLTree tree1, AVLTree.Node Minvalue)
+    private static Node GetLeftSubtreeWithHeight(Node node, int targetHeight, AVLTree tree1, AVLTree.Node Xvalue)
     {
         if (node == null) return null;
 
@@ -186,14 +184,14 @@ class AVLTree
         int height = GetHeight(node);
         if (height > targetHeight)
         {
-            node.Left = GetLeftSubtreeWithHeight(node.Left, targetHeight, tree1, Minvalue);
+            node.Left = GetLeftSubtreeWithHeight(node.Left, targetHeight, tree1, Xvalue);
             return node; // Возвращаем узел, если его высота совпадает с целевой
         }
 
-        Minvalue.Left = tree1.root;
-        Minvalue.Right = node;
+        Xvalue.Left = tree1.root;
+        Xvalue.Right = node;
 
-        return Minvalue;
+        return Xvalue;
     }
 
 
